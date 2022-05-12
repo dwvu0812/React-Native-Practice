@@ -2,14 +2,14 @@ import { StyleSheet, Text, View, Button } from 'react-native';
 import React, {useState} from 'react';
 
 export default function App() {
-  const [name, setName] = useState('A')
+  const [count, setCount] = useState(0);
   return (
     <View style={styles.body}>
-      <Text style={styles.text}>{name}</Text>
+      <Text style={styles.text}>You clicked {count} times!</Text>
       <Button 
-        title='Update'
+        title='ADD'
         style={styles.button}
-        onPress={() => setName('B')}
+        onPress={() => setCount(preSate => preSate + 1)}
       ></Button>
     </View>
   )
