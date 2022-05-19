@@ -1,32 +1,25 @@
-import { StyleSheet, Text, View, Button } from 'react-native';
-import React, {useState} from 'react';
+import {NavigationContainer} from '@react-navigation/native';
+import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import React from 'react';
+import {Text, View} from 'react-native';
+import Pressable from 'react-native/Libraries/Components/Pressable/Pressable';
+import Home from './src/Home';
+import Login from './src/Login';
+
+const Stack = createNativeStackNavigator();
+// const Tab = createBottomTabNavigator();
 
 export default function App() {
-  const [count, setCount] = useState(0);
   return (
-    <View style={styles.body}>
-      <Text style={styles.text}>You clicked {count} times!</Text>
-      <Button 
-        title='ADD'
-        style={styles.button}
-        onPress={() => setCount(preSate => preSate + 1)}
-      ></Button>
-    </View>
-  )
+    <NavigationContainer>
+      <Stack.Navigator
+        // screenOptions={{
+        //   header: () => null,
+        // }}
+        >
+        <Stack.Screen name="Login" component={Login} options= {{headerShown: false}}/>
+        <Stack.Screen name="Home" component={Home} />
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
 }
-
-const styles = StyleSheet.create({
-  body: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  text : {
-    color: 'black',
-    fontSize: 30,
-    margin: 10
-  },
-  button: {
-    // padding: 20,
-  }
-});
