@@ -5,15 +5,46 @@ import {Text, View, StyleSheet, TextInput, Alert} from 'react-native';
 import Pressable from 'react-native/Libraries/Components/Pressable/Pressable';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import CustomButton from '../CustomButton';
+import SQLite from 'react-native-sqlite-storage';
+
+import {useSelector, useDispatch} from 'react-redux';
+import {setName, setAge} from '../redux/actions';
+
+const db = SQLite.openDatabase(
+  {
+    name: 'MainDB',
+    location: 'default',
+  },
+  () => {},
+  error => console.log(error),
+);
 
 export default function Home({navigation, route}) {
-  const [name, setName] = useState('');
+  const {name, age} = useSelector(state => state.userReducer);
+  const dispatch = useDispatch();
+
+  // const [name, setName] = useState('');
+  // const [age, setAge] = useState('');
+
   const getData = () => {
     try {
-      AsyncStorage.getItem('UserName').then(value => {
-        if (value != null) {
-          setName(value);
-        }
+      // AsyncStorage.getItem('UserData').then(value => {
+      //   if (value != null) {
+      //     let user = JSON.parse(value);
+      //     setName(user.name);
+      //     setAge(user.age);
+      //   }
+      // });
+      db.transaction(tx => {
+        tx.executeSql('SELECT Name, Age FROM Users', [], (tx, results) => {
+          let len = results.rows.length;
+          if (len > 0) {
+            let userName = results.rows.item(0).Name;
+            let userAge = results.rows.item(0).Age;
+            dispatch(setName(userName));
+            dispatch(setAge(userAge));
+          }
+        });
       });
     } catch (error) {
       console.log(error);
@@ -24,12 +55,26 @@ export default function Home({navigation, route}) {
   }, []);
 
   const updateData = async () => {
-    if (!name.length) {
+    if (name.length == 0 && age.length == 0) {
       Alert.alert('Warning', 'Please write your data');
     } else {
       try {
-        await AsyncStorage.setItem('UserName', name);
-        Alert.alert('Success!', 'Your data has been updated.');
+        // let user = {
+        //   name, age
+        // }
+        // await AsyncStorage.setItem('UserData', JSON.stringify(user));
+        db.transaction(tx => {
+          tx.executeSql(
+            'UPDATE Users SET Name=?',
+            [name],
+
+            () => {
+              Alert.alert('Success!', 'Your data has been updated.');
+              getData();
+            },
+            error => console.log(error),
+          );
+        });
       } catch (error) {
         console.log(error);
       }
@@ -37,9 +82,17 @@ export default function Home({navigation, route}) {
   };
   const removeData = async () => {
     try {
-      await AsyncStorage.removeItem('UserName');
+      // await AsyncStorage.removeItem('UserData');
       // Alert.alert('Success!', 'You removed your data.');
-      navigation.navigate('Login');
+      db.transaction((tx) => {
+        tx.executeSql(
+          "DELETE FROM Users",
+          [],
+          () => {navigation.navigate('Login');},
+          error => {console.log(error)}
+        )
+      })
+      
     } catch (error) {
       console.log(error);
     }
@@ -54,11 +107,17 @@ export default function Home({navigation, route}) {
         <Text>Go to Screen B</Text>
       </Pressable> */}
       <Text style={{fontSize: 30}}>Welcome {name}</Text>
+      <Text style={{fontSize: 30}}>Your age {age}</Text>
       <TextInput
         style={styles.input}
         placeholder="Enter your name"
-        onChangeText={setName}
+        onChangeText={value => dispatch(setName(value))}
       />
+      {/* <TextInput
+        style={styles.input}
+        placeholder="Enter your age"
+        onChangeText={setAge}
+      /> */}
       <CustomButton
         title="Update data"
         onPressFunction={updateData}
@@ -78,7 +137,7 @@ const styles = StyleSheet.create({
     width: '80%',
     // height: 30,
     backgroundColor: '#fff',
-    marginTop: 130,
+    marginTop: 10,
     marginBottom: 10,
     textAlign: 'center',
     borderRadius: 10,
